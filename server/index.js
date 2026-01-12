@@ -1,13 +1,29 @@
+const http = require('http');
 const { WebSocketServer } = require('ws');
 const store = require('./store');
 
 const PORT = process.env.PORT || 3000;
-const wss = new WebSocketServer({ port: PORT });
+
+// Create HTTP server for health checks
+const server = http.createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', users: store.getUserCount?.() || 0 }));
+  } else {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('openGen signaling server');
+  }
+});
+
+// Create WebSocket server attached to HTTP server
+const wss = new WebSocketServer({ server });
 
 // Map ws connections to user IDs
 const wsToId = new Map();
 
-console.log(`OpenGen signaling server running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`OpenGen signaling server running on port ${PORT}`);
+});
 
 wss.on('connection', (ws) => {
   console.log('New connection');
