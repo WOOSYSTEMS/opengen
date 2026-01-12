@@ -106,6 +106,7 @@ const App = {
     document.getElementById('dnd-toggle').addEventListener('change', (e) => {
       Storage.updateSetting('doNotDisturb', e.target.checked);
     });
+    document.getElementById('clear-data-btn').addEventListener('click', () => this.clearAllData());
 
     // Add contact
     this.elements.addContactBtn.addEventListener('click', () => this.showAddContact());
@@ -508,6 +509,15 @@ const App = {
 
   hideSettings() {
     this.elements.settingsModal.classList.remove('active');
+  },
+
+  clearAllData() {
+    if (confirm('This will clear all contacts, messages, and settings. Continue?')) {
+      Storage.clearAll();
+      Identity.logout();
+      this.hideSettings();
+      this.showAuthScreen();
+    }
   }
 };
 

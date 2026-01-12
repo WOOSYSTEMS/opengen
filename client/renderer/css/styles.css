@@ -162,6 +162,16 @@ input.hidden {
   background: var(--bg-secondary);
 }
 
+.btn.danger {
+  background: #ff4444;
+  color: white;
+  margin-top: 12px;
+}
+
+.btn.danger:hover {
+  background: #ff6666;
+}
+
 .btn.accept {
   background: var(--success);
   color: #000;

@@ -152,6 +152,15 @@ const Storage = {
 
   isContactMuted(contactId) {
     return this.getSettings().mutedContacts.includes(contactId);
+  },
+
+  // Clear all data
+  clearAll() {
+    localStorage.removeItem(this.KEYS.USER);
+    localStorage.removeItem(this.KEYS.CONTACTS);
+    localStorage.removeItem(this.KEYS.MESSAGES);
+    localStorage.removeItem(this.KEYS.BLOCKED);
+    localStorage.removeItem(this.KEYS.SETTINGS);
   }
 };
 
