@@ -11,32 +11,17 @@ const WebRTCManager = {
 
   config: {
     iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      // Free TURN servers for NAT traversal
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      }
-    ],
-    iceCandidatePoolSize: 10
+      { urls: 'stun:stun.l.google.com:19302' }
+    ]
   },
 
   listeners: new Map(),
 
   async init(peerId, isInitiator) {
+    console.log('=== WebRTC Init ===');
+    console.log('Peer ID:', peerId);
+    console.log('Is Initiator:', isInitiator);
+
     this.currentPeerId = peerId;
     this.isInitiator = isInitiator;
 

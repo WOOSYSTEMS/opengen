@@ -77,6 +77,12 @@ const Call = {
     // Use audio element for audio-only calls
     this.elements.remoteAudio.srcObject = stream;
     this.elements.remoteVideo.srcObject = stream;
+
+    // Force play audio (mobile autoplay workaround)
+    this.elements.remoteAudio.play().catch(e => {
+      console.log('Audio autoplay blocked, will play on user interaction');
+    });
+
     this.elements.callStatus.textContent = 'Connected';
     this.startDurationTimer();
   },
