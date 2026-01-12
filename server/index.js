@@ -127,6 +127,17 @@ function handleMessage(ws, msg) {
       break;
     }
 
+    case 'ready': {
+      const { targetId } = msg;
+      const fromId = wsToId.get(ws);
+      const targetWs = store.getWs(targetId);
+
+      if (targetWs) {
+        send(targetWs, 'ready', { fromId });
+      }
+      break;
+    }
+
     case 'offer': {
       const { targetId, offer } = msg;
       const fromId = wsToId.get(ws);

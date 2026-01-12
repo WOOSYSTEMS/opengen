@@ -387,6 +387,7 @@ const App = {
 
   async startCallWithContact(contact) {
     this.isInCall = true;
+    this.pendingOutgoingCall = contact;
     Chat.setContact(contact.id);
 
     // Show call view
@@ -396,9 +397,10 @@ const App = {
 
     try {
       await Signaling.call(contact.id);
-      await Call.startCall(contact.id, true);
+      // Now wait for receiver to accept (handled in handleCallResponse)
     } catch (e) {
       console.error('Failed to start call:', e);
+      this.pendingOutgoingCall = null;
       this.goHome();
     }
   },
@@ -465,9 +467,14 @@ const App = {
     this.pendingCall = null;
   },
 
-  handleCallResponse(data) {
-    if (!data.accepted) {
+  async handleCallResponse(data) {
+    if (data.accepted && this.pendingOutgoingCall) {
+      // Receiver accepted, now start WebRTC
+      await Call.startCall(this.pendingOutgoingCall.id, true);
+      this.pendingOutgoingCall = null;
+    } else {
       // Call was declined
+      this.pendingOutgoingCall = null;
       this.goHome();
     }
   },

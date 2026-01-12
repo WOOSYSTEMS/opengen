@@ -13,8 +13,25 @@ const WebRTCManager = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' }
-    ]
+      { urls: 'stun:stun2.l.google.com:19302' },
+      // Free TURN servers for NAT traversal
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ],
+    iceCandidatePoolSize: 10
   },
 
   listeners: new Map(),
@@ -44,6 +61,26 @@ const WebRTCManager = {
       const state = this.peerConnection.connectionState;
       console.log('Connection state:', state);
       this.emit('connection-state', state);
+    };
+
+    // Handle ICE connection state
+    this.peerConnection.oniceconnectionstatechange = () => {
+      const state = this.peerConnection.iceConnectionState;
+      console.log('ICE connection state:', state);
+      if (state === 'failed') {
+        console.error('ICE connection failed - trying to restart ICE');
+        this.peerConnection.restartIce();
+      }
+    };
+
+    // Handle ICE gathering state
+    this.peerConnection.onicegatheringstatechange = () => {
+      console.log('ICE gathering state:', this.peerConnection.iceGatheringState);
+    };
+
+    // Handle signaling state
+    this.peerConnection.onsignalingstatechange = () => {
+      console.log('Signaling state:', this.peerConnection.signalingState);
     };
 
     // Handle incoming tracks
@@ -96,41 +133,102 @@ const WebRTCManager = {
     };
   },
 
+  signalingHandlers: {},
+
   setupSignalingHandlers() {
+    // Remove old handlers first
+    this.removeSignalingHandlers();
+
     // Handle incoming offer
-    Signaling.on('offer', async (data) => {
+    this.signalingHandlers.offer = async (data) => {
       if (data.fromId !== this.currentPeerId) return;
+      if (!this.peerConnection) return;
 
-      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-      const answer = await this.peerConnection.createAnswer();
-      await this.peerConnection.setLocalDescription(answer);
+      try {
+        console.log('Received offer, setting remote description...');
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        console.log('Creating answer...');
+        const answer = await this.peerConnection.createAnswer();
+        await this.peerConnection.setLocalDescription(answer);
+        console.log('Sending answer...');
 
-      Signaling.send('answer', {
-        targetId: this.currentPeerId,
-        answer: answer
-      });
-    });
+        Signaling.send('answer', {
+          targetId: this.currentPeerId,
+          answer: answer
+        });
+      } catch (e) {
+        console.error('Error handling offer:', e);
+      }
+    };
+    Signaling.on('offer', this.signalingHandlers.offer);
+
+    // Handle ready signal from receiver
+    this.signalingHandlers.ready = (data) => {
+      if (data.fromId !== this.currentPeerId) return;
+      if (this.isInitiator) {
+        console.log('Received ready signal, sending offer...');
+        this.sendOffer();
+      }
+    };
+    Signaling.on('ready', this.signalingHandlers.ready);
 
     // Handle incoming answer
-    Signaling.on('answer', async (data) => {
+    this.signalingHandlers.answer = async (data) => {
       if (data.fromId !== this.currentPeerId) return;
-      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-    });
+      if (!this.peerConnection) return;
+
+      try {
+        console.log('Received answer, setting remote description...');
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      } catch (e) {
+        console.error('Error handling answer:', e);
+      }
+    };
+    Signaling.on('answer', this.signalingHandlers.answer);
 
     // Handle ICE candidates
-    Signaling.on('ice-candidate', async (data) => {
+    this.signalingHandlers.iceCandidate = async (data) => {
       if (data.fromId !== this.currentPeerId) return;
-      if (data.candidate) {
-        await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+      if (!this.peerConnection) return;
+
+      try {
+        if (data.candidate) {
+          console.log('Adding ICE candidate...');
+          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      } catch (e) {
+        console.error('Error adding ICE candidate:', e);
       }
-    });
+    };
+    Signaling.on('ice-candidate', this.signalingHandlers.iceCandidate);
 
     // Handle hangup
-    Signaling.on('hangup', (data) => {
+    this.signalingHandlers.hangup = (data) => {
       if (data.fromId !== this.currentPeerId) return;
+      console.log('Received hangup signal');
       this.emit('hangup');
       this.close();
-    });
+    };
+    Signaling.on('hangup', this.signalingHandlers.hangup);
+  },
+
+  removeSignalingHandlers() {
+    if (this.signalingHandlers.offer) {
+      Signaling.off('offer', this.signalingHandlers.offer);
+    }
+    if (this.signalingHandlers.ready) {
+      Signaling.off('ready', this.signalingHandlers.ready);
+    }
+    if (this.signalingHandlers.answer) {
+      Signaling.off('answer', this.signalingHandlers.answer);
+    }
+    if (this.signalingHandlers.iceCandidate) {
+      Signaling.off('ice-candidate', this.signalingHandlers.iceCandidate);
+    }
+    if (this.signalingHandlers.hangup) {
+      Signaling.off('hangup', this.signalingHandlers.hangup);
+    }
+    this.signalingHandlers = {};
   },
 
   async startCall() {
@@ -150,19 +248,27 @@ const WebRTCManager = {
 
       this.emit('local-stream', this.localStream);
 
-      // Create and send offer (initiator only)
-      if (this.isInitiator) {
-        const offer = await this.peerConnection.createOffer();
-        await this.peerConnection.setLocalDescription(offer);
-
-        Signaling.send('offer', {
-          targetId: this.currentPeerId,
-          offer: offer
-        });
+      // Initiator waits for ready signal, receiver sends ready
+      if (!this.isInitiator) {
+        Signaling.send('ready', { targetId: this.currentPeerId });
       }
     } catch (e) {
       console.error('Error starting call:', e);
       this.emit('error', e);
+    }
+  },
+
+  async sendOffer() {
+    try {
+      const offer = await this.peerConnection.createOffer();
+      await this.peerConnection.setLocalDescription(offer);
+
+      Signaling.send('offer', {
+        targetId: this.currentPeerId,
+        offer: offer
+      });
+    } catch (e) {
+      console.error('Error sending offer:', e);
     }
   },
 
@@ -294,6 +400,11 @@ const WebRTCManager = {
   },
 
   close() {
+    console.log('Closing WebRTC connection...');
+
+    // Clean up signaling handlers first
+    this.removeSignalingHandlers();
+
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
