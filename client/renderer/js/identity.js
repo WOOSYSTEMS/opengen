@@ -4,16 +4,16 @@
 const Identity = {
   currentUser: null,
 
-  async generateId(username, password) {
-    const data = new TextEncoder().encode(username.toLowerCase() + password);
+  async generateId(username, password, pin) {
+    const data = new TextEncoder().encode(username.toLowerCase() + password + pin);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   },
 
   // Single join method - no separate register/login
-  async join(username, password, displayName) {
-    const id = await this.generateId(username, password);
+  async join(username, password, pin, displayName) {
+    const id = await this.generateId(username, password, pin);
 
     return new Promise((resolve, reject) => {
       const handler = (result) => {

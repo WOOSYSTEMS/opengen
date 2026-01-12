@@ -28,11 +28,12 @@
       <div class="auth-form">
         <input type="text" id="username" placeholder="Username" autocomplete="off">
         <input type="password" id="password" placeholder="Password">
+        <input type="text" id="pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*">
         <input type="text" id="displayName" placeholder="Display Name (optional)">
 
         <button id="join-btn" class="btn primary full-width">Join</button>
 
-        <p class="auth-hint">Same username + password = same identity. No account needed.</p>
+        <p class="auth-hint">Same username + password + PIN = same identity.</p>
         <p id="auth-error" class="error"></p>
       </div>
     </div>

@@ -64,6 +64,7 @@ const App = {
     // Auth
     this.elements.usernameInput = document.getElementById('username');
     this.elements.passwordInput = document.getElementById('password');
+    this.elements.pinInput = document.getElementById('pin');
     this.elements.displayNameInput = document.getElementById('displayName');
     this.elements.joinBtn = document.getElementById('join-btn');
     this.elements.authError = document.getElementById('auth-error');
@@ -199,10 +200,16 @@ const App = {
   async handleJoin() {
     const username = this.elements.usernameInput.value.trim();
     const password = this.elements.passwordInput.value;
+    const pin = this.elements.pinInput.value.trim();
     const displayName = this.elements.displayNameInput.value.trim() || username;
 
     if (!username || !password) {
       this.elements.authError.textContent = 'Please enter username and password';
+      return;
+    }
+
+    if (!pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
+      this.elements.authError.textContent = 'Please enter a 6-digit PIN';
       return;
     }
 
@@ -211,7 +218,7 @@ const App = {
       this.elements.joinBtn.textContent = 'Connecting...';
 
       await Signaling.connect();
-      await Identity.join(username, password, displayName);
+      await Identity.join(username, password, pin, displayName);
 
       this.showMainScreen();
     } catch (e) {
@@ -233,6 +240,7 @@ const App = {
     this.elements.mainScreen.classList.remove('active');
     this.elements.usernameInput.value = '';
     this.elements.passwordInput.value = '';
+    this.elements.pinInput.value = '';
     this.elements.displayNameInput.value = '';
     this.elements.authError.textContent = '';
   },
