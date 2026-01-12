@@ -178,6 +178,40 @@ button, input {
   background: #00cc6a;
 }
 
+/* Code display */
+.my-code-display {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.my-code-display canvas {
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.code-text {
+  font-family: monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+.modal-hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
 input {
   width: 100%;
   padding: 16px 20px;

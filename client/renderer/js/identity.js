@@ -11,14 +11,31 @@ const Identity = {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   },
 
+  // Generate 12-char alphanumeric code from hash
+  generateShortCode(hash) {
+    const chars = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // No I, O (avoid confusion with 1, 0)
+    let code = '';
+    for (let i = 0; i < 12; i++) {
+      const byte = parseInt(hash.substr(i * 2, 2), 16);
+      code += chars[byte % chars.length];
+    }
+    return code;
+  },
+
   // Single join method - no separate register/login
   async join(username, password, pin, displayName) {
     const id = await this.generateId(username, password, pin);
+    const shortCode = this.generateShortCode(id);
 
     return new Promise((resolve, reject) => {
       const handler = (result) => {
         if (result.success) {
-          this.currentUser = { id, username, displayName: displayName || username };
+          this.currentUser = {
+            id,
+            shortCode,
+            username,
+            displayName: displayName || username
+          };
           Storage.saveUser(this.currentUser);
           resolve({ success: true });
         } else {
@@ -27,7 +44,7 @@ const Identity = {
       };
 
       Signaling.once('join-result', handler);
-      Signaling.send('join', { id, username, displayName: displayName || username });
+      Signaling.send('join', { id, shortCode, username, displayName: displayName || username });
 
       setTimeout(() => {
         Signaling.off('join-result', handler);

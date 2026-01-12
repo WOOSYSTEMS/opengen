@@ -59,29 +59,29 @@ function handleMessage(ws, msg) {
   switch (type) {
     case 'join': {
       // Simple join - no registration needed
-      // Client sends: { type: 'join', id, username, displayName }
-      const { id, username, displayName } = msg;
-      store.join(id, username, displayName);
+      // Client sends: { type: 'join', id, shortCode, username, displayName }
+      const { id, shortCode, username, displayName } = msg;
+      store.join(id, shortCode, username, displayName);
       wsToId.set(ws, id);
       store.setOnline(id, ws);
-      console.log(`Joined: ${username} (${id.slice(0, 8)}...)`);
-      send(ws, 'join-result', { success: true, displayName, username });
+      console.log(`Joined: ${displayName} [${shortCode}]`);
+      send(ws, 'join-result', { success: true, displayName, shortCode });
       break;
     }
 
     case 'lookup': {
-      const { username } = msg;
-      const user = store.getUserByUsername(username);
+      // Lookup by 12-char shortCode
+      const { shortCode } = msg;
+      const user = store.getUserByShortCode(shortCode);
       if (user) {
         send(ws, 'lookup-result', {
           success: true,
           id: user.id,
-          displayName: user.displayName,
-          username: user.username,
-          online: user.online
+          shortCode: user.shortCode,
+          displayName: user.displayName
         });
       } else {
-        send(ws, 'lookup-result', { success: false, error: 'User not found' });
+        send(ws, 'lookup-result', { success: false, error: 'User not found or offline' });
       }
       break;
     }

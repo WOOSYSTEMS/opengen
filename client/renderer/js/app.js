@@ -115,6 +115,7 @@ const App = {
       Storage.updateSetting('doNotDisturb', e.target.checked);
     });
     document.getElementById('clear-data-btn').addEventListener('click', () => this.clearAllData());
+    document.getElementById('copy-code-btn').addEventListener('click', () => this.copyCode());
 
     // Add contact
     this.elements.addContactBtn.addEventListener('click', () => this.showAddContact());
@@ -306,10 +307,10 @@ const App = {
 
     this.elements.contactsList.innerHTML = contacts.map(contact => `
       <div class="contact-item" data-id="${contact.id}">
-        <div class="contact-avatar">${contact.displayName.charAt(0).toUpperCase()}</div>
+        <div class="contact-avatar">${(contact.displayName || '?').charAt(0).toUpperCase()}</div>
         <div class="contact-info">
-          <div class="contact-name">${this.escapeHtml(contact.displayName)}</div>
-          <div class="contact-status">@${this.escapeHtml(contact.username)}</div>
+          <div class="contact-name">${this.escapeHtml(contact.displayName || 'Unknown')}</div>
+          <div class="contact-status">${this.escapeHtml(contact.shortCode || '')}</div>
         </div>
         <div class="contact-actions">
           <button class="action-btn call-btn" title="Call">
@@ -359,7 +360,7 @@ const App = {
 
   showAddContact() {
     this.elements.addContactModal.classList.add('active');
-    document.getElementById('contact-username').value = '';
+    document.getElementById('contact-code').value = '';
     document.getElementById('contact-error').textContent = '';
   },
 
@@ -368,20 +369,26 @@ const App = {
   },
 
   async addContact() {
-    const username = document.getElementById('contact-username').value.trim();
+    const code = document.getElementById('contact-code').value.trim().toUpperCase().replace(/[^0-9A-Z]/g, '');
     const errorEl = document.getElementById('contact-error');
 
-    if (!username) {
-      errorEl.textContent = 'Please enter a username';
+    if (!code || code.length !== 12) {
+      errorEl.textContent = 'Please enter a valid 12-character code';
+      return;
+    }
+
+    // Don't add yourself
+    if (Identity.currentUser && code === Identity.currentUser.shortCode) {
+      errorEl.textContent = "That's your own code!";
       return;
     }
 
     try {
-      const result = await Signaling.lookupUser(username);
+      const result = await Signaling.lookupUser(code);
 
       Storage.addContact({
         id: result.id,
-        username: result.username,
+        shortCode: result.shortCode,
         displayName: result.displayName
       });
 
@@ -513,6 +520,26 @@ const App = {
 
   showSettings() {
     this.elements.settingsModal.classList.add('active');
+
+    // Display user's code
+    if (Identity.currentUser && Identity.currentUser.shortCode) {
+      const code = Identity.currentUser.shortCode;
+      document.getElementById('my-short-code').textContent = code;
+
+      // Generate QR code
+      const canvas = document.getElementById('qr-code');
+      QRCode.generate(canvas, code, 150);
+    }
+  },
+
+  copyCode() {
+    if (Identity.currentUser && Identity.currentUser.shortCode) {
+      navigator.clipboard.writeText(Identity.currentUser.shortCode).then(() => {
+        const btn = document.getElementById('copy-code-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy Code', 2000);
+      });
+    }
   },
 
   hideSettings() {

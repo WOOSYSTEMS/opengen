@@ -126,7 +126,7 @@ const Signaling = {
   },
 
   // Convenience methods
-  lookupUser(username) {
+  lookupUser(shortCode) {
     return new Promise((resolve, reject) => {
       const handler = (result) => {
         if (result.success) {
@@ -137,7 +137,7 @@ const Signaling = {
       };
 
       this.once('lookup-result', handler);
-      this.send('lookup', { username });
+      this.send('lookup', { shortCode: shortCode.toUpperCase().replace(/[^0-9A-Z]/g, '') });
 
       setTimeout(() => {
         this.off('lookup-result', handler);

@@ -212,7 +212,8 @@
     <div id="add-contact-modal" class="modal">
       <div class="modal-content">
         <h3>Add Contact</h3>
-        <input type="text" id="contact-username" placeholder="Enter username">
+        <p class="modal-hint">Enter their 12-character code or scan QR</p>
+        <input type="text" id="contact-code" placeholder="e.g. A7F3B2C9D4E1" maxlength="12" style="text-transform: uppercase; letter-spacing: 2px;">
         <p id="contact-error" class="error"></p>
         <div class="modal-buttons">
           <button id="add-contact-confirm" class="btn primary">Add</button>
@@ -224,6 +225,13 @@
     <!-- Settings modal -->
     <div id="settings-modal" class="modal">
       <div class="modal-content">
+        <h3>Your Code</h3>
+        <div class="my-code-display">
+          <canvas id="qr-code"></canvas>
+          <div class="code-text" id="my-short-code">------</div>
+          <button id="copy-code-btn" class="btn secondary">Copy Code</button>
+        </div>
+        <hr class="divider">
         <h3>Settings</h3>
         <div class="settings-list">
           <label class="setting-item">
@@ -252,6 +260,7 @@
   </div>
 
   <!-- Scripts -->
+  <script src="js/qrcode.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/identity.js"></script>
   <script src="js/signaling.js"></script>

@@ -1,13 +1,15 @@
 // In-memory session store
 // No registration - just tracks online sessions
-// Identity = hash(username + password), generated client-side
+// Identity = hash(username + password + pin), generated client-side
 
-const sessions = new Map(); // id → { displayName, username, ws }
+const sessions = new Map(); // id → { shortCode, displayName, username, ws }
+const shortCodeToId = new Map(); // shortCode → id (for lookup)
 
 module.exports = {
   // Join with your hash ID - creates session if not exists
-  join(id, username, displayName) {
-    sessions.set(id, { displayName, username, ws: null });
+  join(id, shortCode, username, displayName) {
+    sessions.set(id, { shortCode, displayName, username, ws: null });
+    shortCodeToId.set(shortCode, id);
     return { success: true };
   },
 
@@ -23,6 +25,10 @@ module.exports = {
 
   // Remove session when disconnected
   setOffline(id) {
+    const session = sessions.get(id);
+    if (session) {
+      shortCodeToId.delete(session.shortCode);
+    }
     sessions.delete(id);
     return true;
   },
@@ -31,13 +37,12 @@ module.exports = {
     return sessions.get(id) || null;
   },
 
-  getUserByUsername(username) {
-    for (const [id, session] of sessions) {
-      if (session.username.toLowerCase() === username.toLowerCase()) {
-        return { id, ...session };
-      }
-    }
-    return null;
+  // Lookup by 12-char shortCode
+  getUserByShortCode(shortCode) {
+    const id = shortCodeToId.get(shortCode.toUpperCase());
+    if (!id) return null;
+    const session = sessions.get(id);
+    return session ? { id, ...session } : null;
   },
 
   isOnline(id) {
