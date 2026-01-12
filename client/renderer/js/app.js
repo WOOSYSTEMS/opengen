@@ -53,23 +53,25 @@ const App = {
   },
 
   cacheElements() {
-    // Screens
+    // Screens (3 separate screens)
     this.elements.authScreen = document.getElementById('auth-screen');
+    this.elements.pinScreen = document.getElementById('pin-screen');
     this.elements.mainScreen = document.getElementById('main-screen');
     this.elements.homeView = document.getElementById('home-view');
     this.elements.callView = document.getElementById('call-view');
     this.elements.cardsContainer = document.querySelector('.cards-container');
     this.elements.dots = document.querySelectorAll('.card-dots .dot');
 
-    // Auth
+    // Auth screen
     this.elements.usernameInput = document.getElementById('username');
     this.elements.passwordInput = document.getElementById('password');
     this.elements.displayNameInput = document.getElementById('displayName');
     this.elements.continueBtn = document.getElementById('continue-btn');
     this.elements.authError = document.getElementById('auth-error');
-    this.elements.authForm = document.querySelector('.auth-form');
-    this.elements.pinKeypad = document.getElementById('pin-keypad');
-    this.elements.pinDots = document.querySelectorAll('.pin-dot');
+
+    // PIN screen
+    this.elements.pinDots = document.querySelectorAll('#pin-screen .pin-dot');
+    this.elements.pinError = document.getElementById('pin-error');
     this.elements.pinCancel = document.getElementById('pin-cancel');
 
     // Header
@@ -101,8 +103,8 @@ const App = {
       if (e.key === 'Enter') this.showPinKeypad();
     });
 
-    // PIN keypad
-    document.querySelectorAll('.key-btn').forEach(btn => {
+    // PIN keypad (keys are inside #pin-screen)
+    document.querySelectorAll('#pin-screen .key-btn').forEach(btn => {
       btn.addEventListener('click', () => this.handleKeyPress(btn.dataset.key));
     });
     this.elements.pinCancel.addEventListener('click', () => this.hidePinKeypad());
@@ -219,15 +221,18 @@ const App = {
     }
 
     this.elements.authError.textContent = '';
-    this.elements.authForm.classList.add('hidden');
-    this.elements.pinKeypad.classList.remove('hidden');
+    // Switch from auth screen to PIN screen
+    this.elements.authScreen.classList.remove('active');
+    this.elements.pinScreen.classList.add('active');
     this.currentPin = '';
     this.updatePinDots();
+    if (this.elements.pinError) this.elements.pinError.textContent = '';
   },
 
   hidePinKeypad() {
-    this.elements.pinKeypad.classList.add('hidden');
-    this.elements.authForm.classList.remove('hidden');
+    // Switch from PIN screen back to auth screen
+    this.elements.pinScreen.classList.remove('active');
+    this.elements.authScreen.classList.add('active');
     this.currentPin = '';
     this.updatePinDots();
   },
@@ -261,11 +266,14 @@ const App = {
       await Signaling.connect();
       await Identity.join(username, password, pin, displayName);
 
-      this.hidePinKeypad();
+      // Switch from PIN screen to main screen
+      this.elements.pinScreen.classList.remove('active');
       this.showMainScreen();
     } catch (e) {
-      this.elements.authError.textContent = e.message;
-      this.hidePinKeypad();
+      // Show error on PIN screen
+      if (this.elements.pinError) {
+        this.elements.pinError.textContent = e.message;
+      }
     }
   },
 
@@ -276,17 +284,22 @@ const App = {
   },
 
   showAuthScreen() {
-    this.elements.authScreen.classList.add('active');
+    // Hide all other screens, show auth
+    this.elements.pinScreen.classList.remove('active');
     this.elements.mainScreen.classList.remove('active');
+    this.elements.authScreen.classList.add('active');
+    // Clear inputs
     this.elements.usernameInput.value = '';
     this.elements.passwordInput.value = '';
     this.elements.displayNameInput.value = '';
     this.elements.authError.textContent = '';
-    this.hidePinKeypad();
+    this.currentPin = '';
   },
 
   showMainScreen() {
+    // Hide auth and PIN screens, show main
     this.elements.authScreen.classList.remove('active');
+    this.elements.pinScreen.classList.remove('active');
     this.elements.mainScreen.classList.add('active');
     this.elements.currentUser.textContent = Identity.currentUser.displayName;
 

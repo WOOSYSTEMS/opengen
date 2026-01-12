@@ -45,7 +45,8 @@ button, input {
 }
 
 /* Auth Screen */
-#auth-screen {
+#auth-screen,
+#pin-screen {
   justify-content: center;
   align-items: center;
   padding: 20px;
@@ -54,7 +55,8 @@ button, input {
 }
 
 /* Floating particles background */
-#auth-screen::before {
+#auth-screen::before,
+#pin-screen::before {
   content: '';
   position: absolute;
   top: 0;
@@ -142,6 +144,7 @@ button, input {
   gap: 12px;
   max-width: 280px;
   margin: 0 auto 24px;
+  justify-items: center;
 }
 
 .key-btn {

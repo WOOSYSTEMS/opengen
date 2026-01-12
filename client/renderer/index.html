@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <!-- Auth Screen -->
+  <!-- Auth Screen - Step 1: Username & Password -->
   <div id="auth-screen" class="screen active">
     <div class="auth-container">
       <h1 class="logo">openGen</h1>
@@ -35,9 +35,15 @@
         <p class="auth-hint">Same credentials = same identity. No account needed.</p>
         <p id="auth-error" class="error"></p>
       </div>
+    </div>
+  </div>
 
-      <!-- PIN Keypad -->
-      <div id="pin-keypad" class="pin-keypad hidden">
+  <!-- PIN Screen - Step 2: 6-digit PIN -->
+  <div id="pin-screen" class="screen">
+    <div class="auth-container">
+      <h1 class="logo">openGen</h1>
+
+      <div class="pin-keypad">
         <h3>Enter your 6-digit PIN</h3>
         <div class="pin-display">
           <span class="pin-dot"></span>
@@ -61,7 +67,8 @@
           <button class="key-btn" data-key="0">0</button>
           <button class="key-btn key-confirm" data-key="confirm">✓</button>
         </div>
-        <button id="pin-cancel" class="btn secondary">Cancel</button>
+        <button id="pin-cancel" class="btn secondary">Back</button>
+        <p id="pin-error" class="error"></p>
       </div>
     </div>
   </div>
