@@ -8,8 +8,10 @@ const shortCodeToId = new Map(); // shortCode → id (for lookup)
 module.exports = {
   // Join with your hash ID - creates session if not exists
   join(id, shortCode, username, displayName) {
-    sessions.set(id, { shortCode, displayName, username, ws: null });
-    shortCodeToId.set(shortCode, id);
+    const upperCode = shortCode.toUpperCase();
+    sessions.set(id, { shortCode: upperCode, displayName, username, ws: null });
+    shortCodeToId.set(upperCode, id);
+    console.log(`Stored shortCode: ${upperCode} -> ${id.slice(0, 8)}...`);
     return { success: true };
   },
 
