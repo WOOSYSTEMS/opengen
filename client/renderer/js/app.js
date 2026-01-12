@@ -64,10 +64,13 @@ const App = {
     // Auth
     this.elements.usernameInput = document.getElementById('username');
     this.elements.passwordInput = document.getElementById('password');
-    this.elements.pinInput = document.getElementById('pin');
     this.elements.displayNameInput = document.getElementById('displayName');
-    this.elements.joinBtn = document.getElementById('join-btn');
+    this.elements.continueBtn = document.getElementById('continue-btn');
     this.elements.authError = document.getElementById('auth-error');
+    this.elements.authForm = document.querySelector('.auth-form');
+    this.elements.pinKeypad = document.getElementById('pin-keypad');
+    this.elements.pinDots = document.querySelectorAll('.pin-dot');
+    this.elements.pinCancel = document.getElementById('pin-cancel');
 
     // Header
     this.elements.currentUser = document.getElementById('current-user');
@@ -86,15 +89,23 @@ const App = {
     this.elements.backBtn = document.getElementById('back-btn');
   },
 
+  currentPin: '',
+
   setupEventListeners() {
-    // Auth - single join button
-    this.elements.joinBtn.addEventListener('click', () => this.handleJoin());
+    // Auth - continue to PIN keypad
+    this.elements.continueBtn.addEventListener('click', () => this.showPinKeypad());
     this.elements.passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.handleJoin();
+      if (e.key === 'Enter') this.showPinKeypad();
     });
     this.elements.displayNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.handleJoin();
+      if (e.key === 'Enter') this.showPinKeypad();
     });
+
+    // PIN keypad
+    document.querySelectorAll('.key-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.handleKeyPress(btn.dataset.key));
+    });
+    this.elements.pinCancel.addEventListener('click', () => this.hidePinKeypad());
 
     // Settings
     this.elements.settingsBtn.addEventListener('click', () => this.showSettings());
@@ -197,35 +208,63 @@ const App = {
     }
   },
 
-  async handleJoin() {
+  showPinKeypad() {
     const username = this.elements.usernameInput.value.trim();
     const password = this.elements.passwordInput.value;
-    const pin = this.elements.pinInput.value.trim();
-    const displayName = this.elements.displayNameInput.value.trim() || username;
 
     if (!username || !password) {
       this.elements.authError.textContent = 'Please enter username and password';
       return;
     }
 
-    if (!pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
-      this.elements.authError.textContent = 'Please enter a 6-digit PIN';
-      return;
+    this.elements.authError.textContent = '';
+    this.elements.authForm.classList.add('hidden');
+    this.elements.pinKeypad.classList.remove('hidden');
+    this.currentPin = '';
+    this.updatePinDots();
+  },
+
+  hidePinKeypad() {
+    this.elements.pinKeypad.classList.add('hidden');
+    this.elements.authForm.classList.remove('hidden');
+    this.currentPin = '';
+    this.updatePinDots();
+  },
+
+  handleKeyPress(key) {
+    if (key === 'back') {
+      this.currentPin = this.currentPin.slice(0, -1);
+    } else if (key === 'confirm') {
+      if (this.currentPin.length === 6) {
+        this.handleJoin();
+      }
+    } else if (this.currentPin.length < 6) {
+      this.currentPin += key;
     }
+    this.updatePinDots();
+  },
+
+  updatePinDots() {
+    this.elements.pinDots.forEach((dot, i) => {
+      dot.classList.toggle('filled', i < this.currentPin.length);
+    });
+  },
+
+  async handleJoin() {
+    const username = this.elements.usernameInput.value.trim();
+    const password = this.elements.passwordInput.value;
+    const pin = this.currentPin;
+    const displayName = this.elements.displayNameInput.value.trim() || username;
 
     try {
-      this.elements.joinBtn.disabled = true;
-      this.elements.joinBtn.textContent = 'Connecting...';
-
       await Signaling.connect();
       await Identity.join(username, password, pin, displayName);
 
+      this.hidePinKeypad();
       this.showMainScreen();
     } catch (e) {
       this.elements.authError.textContent = e.message;
-    } finally {
-      this.elements.joinBtn.disabled = false;
-      this.elements.joinBtn.textContent = 'Join';
+      this.hidePinKeypad();
     }
   },
 
@@ -240,9 +279,9 @@ const App = {
     this.elements.mainScreen.classList.remove('active');
     this.elements.usernameInput.value = '';
     this.elements.passwordInput.value = '';
-    this.elements.pinInput.value = '';
     this.elements.displayNameInput.value = '';
     this.elements.authError.textContent = '';
+    this.hidePinKeypad();
   },
 
   showMainScreen() {

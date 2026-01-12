@@ -28,13 +28,40 @@
       <div class="auth-form">
         <input type="text" id="username" placeholder="Username" autocomplete="off">
         <input type="password" id="password" placeholder="Password">
-        <input type="text" id="pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*">
         <input type="text" id="displayName" placeholder="Display Name (optional)">
 
-        <button id="join-btn" class="btn primary full-width">Join</button>
+        <button id="continue-btn" class="btn primary full-width">Continue</button>
 
-        <p class="auth-hint">Same username + password + PIN = same identity.</p>
+        <p class="auth-hint">Same credentials = same identity. No account needed.</p>
         <p id="auth-error" class="error"></p>
+      </div>
+
+      <!-- PIN Keypad -->
+      <div id="pin-keypad" class="pin-keypad hidden">
+        <h3>Enter your 6-digit PIN</h3>
+        <div class="pin-display">
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+        </div>
+        <div class="keypad-grid">
+          <button class="key-btn" data-key="1">1</button>
+          <button class="key-btn" data-key="2">2</button>
+          <button class="key-btn" data-key="3">3</button>
+          <button class="key-btn" data-key="4">4</button>
+          <button class="key-btn" data-key="5">5</button>
+          <button class="key-btn" data-key="6">6</button>
+          <button class="key-btn" data-key="7">7</button>
+          <button class="key-btn" data-key="8">8</button>
+          <button class="key-btn" data-key="9">9</button>
+          <button class="key-btn" data-key="back">←</button>
+          <button class="key-btn" data-key="0">0</button>
+          <button class="key-btn key-confirm" data-key="confirm">✓</button>
+        </div>
+        <button id="pin-cancel" class="btn secondary">Cancel</button>
       </div>
     </div>
   </div>
