@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' ws://localhost:* wss://*; media-src 'self' blob:; style-src 'self' 'unsafe-inline'">
+  <title>openGen</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e94560">
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="openGen">
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="screen active">
+    <div class="auth-container">
+      <h1 class="logo">openGen</h1>
+      <p class="tagline">Free. Private. Yours.</p>
+
+      <div class="auth-form">
+        <input type="text" id="username" placeholder="Username" autocomplete="off">
+        <input type="password" id="password" placeholder="Password">
+        <input type="text" id="displayName" placeholder="Display Name (for register)" class="hidden">
+
+        <div class="auth-buttons">
+          <button id="login-btn" class="btn primary">Login</button>
+          <button id="register-btn" class="btn secondary">Register</button>
+        </div>
+
+        <p id="auth-error" class="error"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Screen -->
+  <div id="main-screen" class="screen">
+    <!-- Header -->
+    <header class="header">
+      <div class="user-info">
+        <span id="current-user"></span>
+        <span class="status-dot online"></span>
+      </div>
+      <button id="settings-btn" class="icon-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Contact List (Home) -->
+    <div id="home-view" class="view active">
+      <div class="contacts-header">
+        <h2>Contacts</h2>
+        <button id="add-contact-btn" class="icon-btn">
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+        </button>
+      </div>
+      <div id="contacts-list" class="contacts-list">
+        <p class="empty-state">No contacts yet. Tap + to add someone.</p>
+      </div>
+    </div>
+
+    <!-- Call View (Active connection) -->
+    <div id="call-view" class="view">
+      <!-- Card navigation dots -->
+      <div class="card-dots">
+        <span class="dot" data-card="0"></span>
+        <span class="dot" data-card="1"></span>
+        <span class="dot" data-card="2"></span>
+      </div>
+
+      <!-- Swipeable cards container -->
+      <div class="cards-container">
+        <!-- Card 1: Call -->
+        <div class="card" id="card-call">
+          <div class="card-header">
+            <span class="card-indicator" id="call-indicator"></span>
+            <h3>Call</h3>
+          </div>
+          <div class="card-content">
+            <div class="video-container">
+              <video id="remote-video" autoplay playsinline></video>
+              <video id="local-video" autoplay playsinline muted></video>
+            </div>
+            <div class="call-info">
+              <span id="call-status">Connecting...</span>
+              <span id="call-duration"></span>
+            </div>
+            <div class="call-controls">
+              <button id="toggle-audio" class="control-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                  <path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V22h-2v-6.07z"/>
+                </svg>
+              </button>
+              <button id="toggle-video" class="control-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                  <path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+              </button>
+              <button id="hangup-btn" class="control-btn hangup">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                  <path fill="currentColor" d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 0 1-.29-.7c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85a.996.996 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Screen Share & Control -->
+        <div class="card" id="card-screen">
+          <div class="card-header">
+            <span class="card-indicator" id="screen-indicator"></span>
+            <h3>Screen</h3>
+          </div>
+          <div class="card-content">
+            <div class="screen-container">
+              <video id="screen-video" autoplay playsinline></video>
+              <canvas id="control-overlay"></canvas>
+            </div>
+            <div class="screen-controls">
+              <button id="share-screen-btn" class="btn primary">Share My Screen</button>
+              <button id="request-control-btn" class="btn secondary" disabled>Request Control</button>
+            </div>
+            <div class="screen-info">
+              <span id="screen-status">No screen shared</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Chat -->
+        <div class="card" id="card-chat">
+          <div class="card-header">
+            <span class="card-indicator" id="chat-indicator"></span>
+            <h3>Chat</h3>
+          </div>
+          <div class="card-content">
+            <div id="messages" class="messages"></div>
+            <div class="chat-input">
+              <input type="text" id="message-input" placeholder="Type a message...">
+              <button id="send-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                  <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back button -->
+      <button id="back-btn" class="back-btn">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Incoming call modal -->
+    <div id="incoming-call-modal" class="modal">
+      <div class="modal-content">
+        <h3>Incoming Call</h3>
+        <p id="caller-name"></p>
+        <div class="modal-buttons">
+          <button id="accept-call" class="btn accept">Accept</button>
+          <button id="decline-call" class="btn decline">Decline</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add contact modal -->
+    <div id="add-contact-modal" class="modal">
+      <div class="modal-content">
+        <h3>Add Contact</h3>
+        <input type="text" id="contact-username" placeholder="Enter username">
+        <p id="contact-error" class="error"></p>
+        <div class="modal-buttons">
+          <button id="add-contact-confirm" class="btn primary">Add</button>
+          <button id="add-contact-cancel" class="btn secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" class="modal">
+      <div class="modal-content">
+        <h3>Settings</h3>
+        <div class="settings-list">
+          <label class="setting-item">
+            <span>Do Not Disturb</span>
+            <input type="checkbox" id="dnd-toggle">
+          </label>
+          <button id="logout-btn" class="btn secondary full-width">Logout</button>
+        </div>
+        <button id="settings-close" class="btn primary">Close</button>
+      </div>
+    </div>
+
+    <!-- Control permission modal -->
+    <div id="control-modal" class="modal">
+      <div class="modal-content">
+        <h3>Control Request</h3>
+        <p id="control-requester"></p>
+        <p class="warning">This will allow them to control your mouse and keyboard.</p>
+        <div class="modal-buttons">
+          <button id="allow-control" class="btn accept">Allow</button>
+          <button id="deny-control" class="btn decline">Deny</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/identity.js"></script>
+  <script src="js/signaling.js"></script>
+  <script src="js/webrtc.js"></script>
+  <script src="js/call.js"></script>
+  <script src="js/screen.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
