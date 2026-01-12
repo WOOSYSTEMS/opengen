@@ -13,9 +13,8 @@ const Signaling = {
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
       return 'ws://localhost:3000';
     }
-    // Production: set this to your deployed signaling server
-    // e.g., 'wss://opengen-server.fly.dev' or 'wss://your-server.railway.app'
-    return window.SIGNALING_SERVER || 'wss://opengen-signal.fly.dev';
+    // Production: Railway WebSocket server
+    return window.SIGNALING_SERVER || 'wss://opengen-production.up.railway.app';
   },
 
   connect() {
