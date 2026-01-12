@@ -390,6 +390,7 @@ const App = {
     this.isInCall = true;
     this.pendingOutgoingCall = contact;
     Chat.setContact(contact.id);
+    Call.setContactInfo(contact);
 
     // Show call view
     this.elements.homeView.classList.remove('active');
@@ -438,6 +439,7 @@ const App = {
     };
 
     Chat.setContact(contact.id);
+    Call.setContactInfo(contact);
 
     // Show call view
     this.elements.homeView.classList.remove('active');

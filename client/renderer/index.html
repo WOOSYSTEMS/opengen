@@ -88,10 +88,15 @@
             <h3>Call</h3>
           </div>
           <div class="card-content">
-            <div class="video-container">
-              <video id="remote-video" autoplay playsinline></video>
-              <video id="local-video" autoplay playsinline muted></video>
+            <div class="audio-call-display">
+              <div class="caller-avatar" id="caller-avatar">?</div>
+              <div class="caller-name" id="caller-display-name">Calling...</div>
             </div>
+            <!-- Hidden video elements for future use -->
+            <video id="remote-video" autoplay playsinline style="display:none"></video>
+            <video id="local-video" autoplay playsinline muted style="display:none"></video>
+            <!-- Audio element for remote audio -->
+            <audio id="remote-audio" autoplay></audio>
             <div class="call-info">
               <span id="call-status">Connecting...</span>
               <span id="call-duration"></span>

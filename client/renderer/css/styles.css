@@ -485,6 +485,46 @@ input.hidden {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
+/* Audio Call Display */
+.audio-call-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--bg-secondary);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+.caller-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #00cc6a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 20px;
+  box-shadow: 0 0 40px var(--accent-glow);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 40px var(--accent-glow); }
+  50% { box-shadow: 0 0 60px var(--accent-glow), 0 0 80px var(--accent-glow); }
+}
+
+.caller-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .call-info {
   display: flex;
   justify-content: space-between;

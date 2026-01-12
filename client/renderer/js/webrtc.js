@@ -234,15 +234,18 @@ const WebRTCManager = {
   async startCall() {
     if (!this.peerConnection) return;
 
-    // Get local media
+    // Get local media - AUDIO ONLY for now
     try {
+      console.log('Requesting audio permission...');
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: true
+        video: false
       });
+      console.log('Got audio stream');
 
       // Add tracks to peer connection
       this.localStream.getTracks().forEach(track => {
+        console.log('Adding track:', track.kind);
         this.peerConnection.addTrack(track, this.localStream);
       });
 
@@ -250,6 +253,7 @@ const WebRTCManager = {
 
       // Initiator waits for ready signal, receiver sends ready
       if (!this.isInitiator) {
+        console.log('Receiver sending ready signal...');
         Signaling.send('ready', { targetId: this.currentPeerId });
       }
     } catch (e) {
@@ -280,7 +284,7 @@ const WebRTCManager = {
 
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: true
+        video: false
       });
 
       this.localStream.getTracks().forEach(track => {

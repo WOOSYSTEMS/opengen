@@ -12,6 +12,9 @@ const Call = {
   elements: {
     localVideo: null,
     remoteVideo: null,
+    remoteAudio: null,
+    callerAvatar: null,
+    callerDisplayName: null,
     callStatus: null,
     callDuration: null,
     toggleAudio: null,
@@ -24,6 +27,9 @@ const Call = {
     // Get DOM elements
     this.elements.localVideo = document.getElementById('local-video');
     this.elements.remoteVideo = document.getElementById('remote-video');
+    this.elements.remoteAudio = document.getElementById('remote-audio');
+    this.elements.callerAvatar = document.getElementById('caller-avatar');
+    this.elements.callerDisplayName = document.getElementById('caller-display-name');
     this.elements.callStatus = document.getElementById('call-status');
     this.elements.callDuration = document.getElementById('call-duration');
     this.elements.toggleAudio = document.getElementById('toggle-audio');
@@ -62,13 +68,25 @@ const Call = {
   },
 
   handleLocalStream(stream) {
+    // For audio-only, we don't show local video
     this.elements.localVideo.srcObject = stream;
   },
 
   handleRemoteStream(stream) {
+    console.log('Got remote stream, tracks:', stream.getTracks().map(t => t.kind));
+    // Use audio element for audio-only calls
+    this.elements.remoteAudio.srcObject = stream;
     this.elements.remoteVideo.srcObject = stream;
     this.elements.callStatus.textContent = 'Connected';
     this.startDurationTimer();
+  },
+
+  setContactInfo(contact) {
+    if (contact) {
+      const initial = contact.displayName ? contact.displayName.charAt(0).toUpperCase() : '?';
+      this.elements.callerAvatar.textContent = initial;
+      this.elements.callerDisplayName.textContent = contact.displayName || 'Unknown';
+    }
   },
 
   handleConnectionState(state) {
@@ -121,9 +139,12 @@ const Call = {
     this.isVideoOff = false;
     this.currentContactId = null;
 
-    // Clear video elements
+    // Clear video/audio elements
     this.elements.localVideo.srcObject = null;
     this.elements.remoteVideo.srcObject = null;
+    if (this.elements.remoteAudio) {
+      this.elements.remoteAudio.srcObject = null;
+    }
 
     // Stop duration timer
     this.stopDurationTimer();
@@ -132,6 +153,8 @@ const Call = {
     this.elements.callStatus.textContent = 'Call ended';
     this.elements.toggleAudio.classList.remove('active');
     this.elements.toggleVideo.classList.remove('active');
+    this.elements.callerAvatar.textContent = '?';
+    this.elements.callerDisplayName.textContent = '';
     this.updateIndicator(false);
 
     // Notify app
