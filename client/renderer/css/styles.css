@@ -97,6 +97,13 @@ button, input {
   gap: 14px;
 }
 
+.auth-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 8px;
+}
+
 input {
   width: 100%;
   padding: 16px 20px;

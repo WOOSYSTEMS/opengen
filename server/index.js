@@ -57,27 +57,15 @@ function handleMessage(ws, msg) {
   const { type } = msg;
 
   switch (type) {
-    case 'register': {
+    case 'join': {
+      // Simple join - no registration needed
+      // Client sends: { type: 'join', id, username, displayName }
       const { id, username, displayName } = msg;
-      const result = store.register(id, username, displayName);
-      if (result.success) {
-        wsToId.set(ws, id);
-        store.setOnline(id, ws);
-        console.log(`Registered: ${username} (${id.slice(0, 8)}...)`);
-      }
-      send(ws, 'register-result', result);
-      break;
-    }
-
-    case 'login': {
-      const { id } = msg;
-      const result = store.login(id);
-      if (result.success) {
-        wsToId.set(ws, id);
-        store.setOnline(id, ws);
-        console.log(`Login: ${result.username} (${id.slice(0, 8)}...)`);
-      }
-      send(ws, 'login-result', result);
+      store.join(id, username, displayName);
+      wsToId.set(ws, id);
+      store.setOnline(id, ws);
+      console.log(`Joined: ${username} (${id.slice(0, 8)}...)`);
+      send(ws, 'join-result', { success: true, displayName, username });
       break;
     }
 

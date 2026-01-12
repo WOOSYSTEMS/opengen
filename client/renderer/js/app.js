@@ -65,8 +65,7 @@ const App = {
     this.elements.usernameInput = document.getElementById('username');
     this.elements.passwordInput = document.getElementById('password');
     this.elements.displayNameInput = document.getElementById('displayName');
-    this.elements.loginBtn = document.getElementById('login-btn');
-    this.elements.registerBtn = document.getElementById('register-btn');
+    this.elements.joinBtn = document.getElementById('join-btn');
     this.elements.authError = document.getElementById('auth-error');
 
     // Header
@@ -86,17 +85,14 @@ const App = {
     this.elements.backBtn = document.getElementById('back-btn');
   },
 
-  isRegisterMode: false,
-
   setupEventListeners() {
-    // Auth
-    this.elements.loginBtn.addEventListener('click', () => this.handleAuthClick());
-    this.elements.registerBtn.addEventListener('click', () => this.handleRegisterClick());
+    // Auth - single join button
+    this.elements.joinBtn.addEventListener('click', () => this.handleJoin());
     this.elements.passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.handleAuthClick();
+      if (e.key === 'Enter') this.handleJoin();
     });
     this.elements.displayNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.handleAuthClick();
+      if (e.key === 'Enter') this.handleJoin();
     });
 
     // Settings
@@ -188,78 +184,41 @@ const App = {
     if (hasSession) {
       try {
         await Signaling.connect();
-        // Re-login to establish presence
-        Signaling.send('login', { id: Identity.currentUser.id });
-
-        Signaling.once('login-result', (result) => {
-          if (result.success) {
-            this.showMainScreen();
-          } else {
-            // Session invalid, show auth
-            Storage.clearUser();
-          }
-        });
+        const success = await Identity.rejoin();
+        if (success) {
+          this.showMainScreen();
+        } else {
+          Storage.clearUser();
+        }
       } catch (e) {
         console.error('Failed to reconnect:', e);
       }
     }
   },
 
-  handleRegisterClick() {
-    if (this.isRegisterMode) {
-      // Already in register mode, submit registration
-      this.doAuth(true);
-    } else {
-      // Switch to register mode
-      this.isRegisterMode = true;
-      this.elements.displayNameInput.classList.remove('hidden');
-      this.elements.registerBtn.textContent = 'Create Account';
-      this.elements.loginBtn.textContent = 'Cancel';
-    }
-  },
-
-  handleAuthClick() {
-    if (this.isRegisterMode) {
-      // In register mode, login button = cancel
-      this.isRegisterMode = false;
-      this.elements.displayNameInput.classList.add('hidden');
-      this.elements.displayNameInput.value = '';
-      this.elements.registerBtn.textContent = 'Register';
-      this.elements.loginBtn.textContent = 'Login';
-      this.elements.authError.textContent = '';
-    } else {
-      // Normal login
-      this.doAuth(false);
-    }
-  },
-
-  async doAuth(isRegister) {
+  async handleJoin() {
     const username = this.elements.usernameInput.value.trim();
     const password = this.elements.passwordInput.value;
-    const displayName = this.elements.displayNameInput.value.trim();
+    const displayName = this.elements.displayNameInput.value.trim() || username;
 
     if (!username || !password) {
       this.elements.authError.textContent = 'Please enter username and password';
       return;
     }
 
-    if (isRegister && !displayName) {
-      this.elements.authError.textContent = 'Please enter a display name';
-      return;
-    }
-
     try {
-      await Signaling.connect();
+      this.elements.joinBtn.disabled = true;
+      this.elements.joinBtn.textContent = 'Connecting...';
 
-      if (isRegister) {
-        await Identity.register(username, password, displayName);
-      } else {
-        await Identity.login(username, password);
-      }
+      await Signaling.connect();
+      await Identity.join(username, password, displayName);
 
       this.showMainScreen();
     } catch (e) {
       this.elements.authError.textContent = e.message;
+    } finally {
+      this.elements.joinBtn.disabled = false;
+      this.elements.joinBtn.textContent = 'Join';
     }
   },
 

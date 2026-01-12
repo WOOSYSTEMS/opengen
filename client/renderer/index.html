@@ -28,13 +28,11 @@
       <div class="auth-form">
         <input type="text" id="username" placeholder="Username" autocomplete="off">
         <input type="password" id="password" placeholder="Password">
-        <input type="text" id="displayName" placeholder="Display Name (for register)" class="hidden">
+        <input type="text" id="displayName" placeholder="Display Name (optional)">
 
-        <div class="auth-buttons">
-          <button id="login-btn" class="btn primary">Login</button>
-          <button id="register-btn" class="btn secondary">Register</button>
-        </div>
+        <button id="join-btn" class="btn primary full-width">Join</button>
 
+        <p class="auth-hint">Same username + password = same identity. No account needed.</p>
         <p id="auth-error" class="error"></p>
       </div>
     </div>

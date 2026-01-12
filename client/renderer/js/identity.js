@@ -1,4 +1,5 @@
 // Identity system: hash(username + password) → unique ID
+// No registration needed - your identity IS the hash
 
 const Identity = {
   currentUser: null,
@@ -10,52 +11,27 @@ const Identity = {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   },
 
-  async register(username, password, displayName) {
+  // Single join method - no separate register/login
+  async join(username, password, displayName) {
     const id = await this.generateId(username, password);
 
     return new Promise((resolve, reject) => {
       const handler = (result) => {
         if (result.success) {
-          this.currentUser = { id, username, displayName };
+          this.currentUser = { id, username, displayName: displayName || username };
           Storage.saveUser(this.currentUser);
           resolve({ success: true });
         } else {
-          reject(new Error(result.error));
+          reject(new Error(result.error || 'Join failed'));
         }
       };
 
-      Signaling.once('register-result', handler);
-      Signaling.send('register', { id, username, displayName });
+      Signaling.once('join-result', handler);
+      Signaling.send('join', { id, username, displayName: displayName || username });
 
-      // Timeout after 10 seconds
       setTimeout(() => {
-        Signaling.off('register-result', handler);
-        reject(new Error('Registration timeout'));
-      }, 10000);
-    });
-  },
-
-  async login(username, password) {
-    const id = await this.generateId(username, password);
-
-    return new Promise((resolve, reject) => {
-      const handler = (result) => {
-        if (result.success) {
-          this.currentUser = { id, username: result.username, displayName: result.displayName };
-          Storage.saveUser(this.currentUser);
-          resolve({ success: true, user: this.currentUser });
-        } else {
-          reject(new Error(result.error));
-        }
-      };
-
-      Signaling.once('login-result', handler);
-      Signaling.send('login', { id });
-
-      // Timeout after 10 seconds
-      setTimeout(() => {
-        Signaling.off('login-result', handler);
-        reject(new Error('Login timeout'));
+        Signaling.off('join-result', handler);
+        reject(new Error('Connection timeout'));
       }, 10000);
     });
   },
@@ -73,6 +49,29 @@ const Identity = {
       return true;
     }
     return false;
+  },
+
+  // Rejoin with saved credentials
+  async rejoin() {
+    if (!this.currentUser) return false;
+
+    return new Promise((resolve) => {
+      const handler = (result) => {
+        resolve(result.success);
+      };
+
+      Signaling.once('join-result', handler);
+      Signaling.send('join', {
+        id: this.currentUser.id,
+        username: this.currentUser.username,
+        displayName: this.currentUser.displayName
+      });
+
+      setTimeout(() => {
+        Signaling.off('join-result', handler);
+        resolve(false);
+      }, 10000);
+    });
   },
 
   getCurrentUser() {
